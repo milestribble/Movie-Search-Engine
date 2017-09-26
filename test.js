@@ -1,19 +1,20 @@
 import {except, assert} from 'chai'
-import {createUser} from './queries'
+import {createUser, verifyUser} from './queries'
 
 describe('Database Queries:', function (){
   describe('Unit - createUser():', function (){
     it('Rejects an already in-use e-mail', function (done){
       createUser()
-        .then(done)
-        .catch(err => {console.log(err);if (err!=='usedEmail'){console.log('yelp');
+        .then(() => { throw new Error(`Expected to reject used e-mail`) })
+        .catch(err => {
+          if (err!=='usedEmail'){
           throw new Error(`Expected to reject used e-mail`)}
-          done()}
+        done()}
       )
     })
     it('Rejects on unmatched passwords', function (done){
       createUser()
-        .then(done)
+        .then(() => { throw new Error(`Expected to reject unmatched passwords`) })
         .catch(err => {
           if (err!=='unmatched'){
           throw new Error(`Expected to reject unmatched passwords`)}
@@ -31,7 +32,39 @@ describe('Database Queries:', function (){
           }})
         .catch(err => {throw new Error(`Expected to return a user object`)})
     })
-  })  
+  })
+  describe('Unit - verifyUser():', function (){
+    it('Rejects an unenrolled e-mail', function (done){
+      verifyUser()
+        .then(() => { throw new Error(`Expected to reject an unenrolled e-mail`) })
+        .catch(err => {
+          if (err!=='usedEmail'){
+          throw new Error(`Expected to reject an unenrolled e-mail`)}
+          done()}
+      )
+    })
+    it('Rejects on wrong password', function (done){
+      verifyUser()
+        .then(() => { throw new Error(`Expected to reject a wrong password`) })
+        .catch(err => {
+          if (err!=='unmatched'){
+          throw new Error(`Expected to reject a wrong password`)}
+        done()}
+      )
+    })
+    it('Returns a Session Array', function (done){
+      verifyUser()
+        .then(session => {
+          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
+           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
+           && !isNaN(session[0])) {
+            done()
+          } else {
+            throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
+          }})
+        .catch(err => {throw new Error(`Expected to return a session array`)})
+    })
+  })
   describe('Integration: User Creation:', function (){
 
 

@@ -3,3 +3,9 @@ export function createUser () {
 
   })
 }
+
+export function verifyUser () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
