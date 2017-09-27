@@ -1,5 +1,5 @@
 import {except, assert} from 'chai'
-import {makeUser, getSession, killSession, makeSession, getUser} from './queries'
+import {getUser, makeUser, getSession, makeSession, killSession, getHistory, makeHistory, killHistory} from './queries'
 
 describe('Database Queries - Unit Tests:', function (){
   describe('makeUser():', function (){
@@ -189,15 +189,6 @@ describe('Database Queries - Unit Tests:', function (){
     })
   })
   describe('getHistory():', function (){
-    it('Rejects an improper session object', function (done){
-      getHistory()
-        .then(() => { throw new Error(`Expected to reject an improper session object`) })
-        .catch(err => {
-          if (err!=='improperSessObject'){
-          throw new Error(`Expected to reject an improper session object`)}
-          done()}
-      )
-    })
     it('Rejects on unfound user', function (done){
       getHistory()
         .then(() => { throw new Error(`Expected to reject on an unfound user`) })
@@ -216,6 +207,27 @@ describe('Database Queries - Unit Tests:', function (){
             throw new Error(`Doesn't appear to the a proper History array: ` + JSON.stringify(history))
           }})
         .catch(err => {throw new Error(`Expected to return a proper History array`+err)})
+    })
+  })
+  describe('killHistory():', function (){
+    it('Rejects on unfound user', function (done){
+      killHistory()
+        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
+        .catch(err => {
+          if (err!=='unfoundSession'){
+          throw new Error(`Expected to reject on an unfound user`)}
+        done()}
+      )
+    })
+    it('Returns a History Array', function (done){
+      killHistory()
+        .then(result => {
+          if (result === 'killedHistory') {
+            done ()
+          } else {
+            throw new Error(`Doesn't appear to have succesfully killedHistory: ` + JSON.stringify(result))
+          }})
+          .catch(err => {throw new Error(`Doesn't appear to have succesfully killedHistory.`+err)})
     })
   })
 })
