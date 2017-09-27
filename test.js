@@ -64,38 +64,6 @@ describe('Database Queries - Unit Tests:', function (){
         .catch(err => {throw new Error(`Expected to return a user object`+err)})
     })
   })
-  describe('getSession():', function (){
-    it('Rejects an improper session object', function (done){
-      getSession()
-        .then(() => { throw new Error(`Expected to reject an improper session object`) })
-        .catch(err => {
-          if (err!=='improperSessObject'){
-          throw new Error(`Expected to reject an improper session object`)}
-          done()}
-      )
-    })
-    it('Rejects on unfound session', function (done){
-      getSession()
-        .then(() => { throw new Error(`Expected to reject on an unfound session`) })
-        .catch(err => {
-          if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an unfound session`)}
-        done()}
-      )
-    })
-    it('Returns a Session Array', function (done){
-      getSession()
-        .then(session => {
-          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
-           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
-           && !isNaN(session[0])) {
-            done()
-          } else {
-            throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
-          }})
-        .catch(err => {throw new Error(`Expected to return a session array`+err)})
-    })
-  })
   describe('makeSession():', function (){
     it('Rejects an improper user object', function (done){
       makeSession()
@@ -117,6 +85,38 @@ describe('Database Queries - Unit Tests:', function (){
     })
     it('Returns a Session Array', function (done){
       makeSession()
+        .then(session => {
+          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
+           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
+           && !isNaN(session[0])) {
+            done()
+          } else {
+            throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
+          }})
+        .catch(err => {throw new Error(`Expected to return a session array`+err)})
+    })
+  })
+  describe('getSession():', function (){
+    it('Rejects an improper session object', function (done){
+      getSession()
+        .then(() => { throw new Error(`Expected to reject an improper session object`) })
+        .catch(err => {
+          if (err!=='improperSessObject'){
+          throw new Error(`Expected to reject an improper session object`)}
+          done()}
+      )
+    })
+    it('Rejects on unfound session', function (done){
+      getSession()
+        .then(() => { throw new Error(`Expected to reject on an unfound session`) })
+        .catch(err => {
+          if (err!=='unfoundSession'){
+          throw new Error(`Expected to reject on an unfound session`)}
+        done()}
+      )
+    })
+    it('Returns a Session Array', function (done){
+      getSession()
         .then(session => {
           if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
            && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
@@ -150,7 +150,7 @@ describe('Database Queries - Unit Tests:', function (){
     it('Returns a confirmation on success', function (done){
       killSession()
         .then(result => {
-        if (result === 'deleted') {
+        if (result === 'killedSession') {
           done ()
         } else {
           throw new Error(`Doesn't appear to have succesfully deleted: ` + JSON.stringify(result))
@@ -180,12 +180,42 @@ describe('Database Queries - Unit Tests:', function (){
     it('Returns a confirmation on success', function (done){
       makeHistory()
         .then(result => {
-        if (result === 'recorded') {
+        if (result === 'madeHistory') {
           done ()
         } else {
           throw new Error(`Doesn't appear to have succesfully recorded: ` + JSON.stringify(result))
         }})
         .catch(err => {throw new Error(`Doesn't appear to have succesfully recorded.`+err)})
+    })
+  })
+  describe('getHistory():', function (){
+    it('Rejects an improper session object', function (done){
+      getHistory()
+        .then(() => { throw new Error(`Expected to reject an improper session object`) })
+        .catch(err => {
+          if (err!=='improperSessObject'){
+          throw new Error(`Expected to reject an improper session object`)}
+          done()}
+      )
+    })
+    it('Rejects on unfound user', function (done){
+      getHistory()
+        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
+        .catch(err => {
+          if (err!=='unfoundSession'){
+          throw new Error(`Expected to reject on an unfound user`)}
+        done()}
+      )
+    })
+    it('Returns a History Array', function (done){
+      getHistory()
+        .then(history => {
+          if (!isNaN(history[0]) && history[1] instanceof Array ) {
+            done()
+          } else {
+            throw new Error(`Doesn't appear to the a proper History array: ` + JSON.stringify(history))
+          }})
+        .catch(err => {throw new Error(`Expected to return a proper History array`+err)})
     })
   })
 })
