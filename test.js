@@ -1,5 +1,5 @@
 import {except, assert} from 'chai'
-import {createUser, getSession, verifyUser} from './queries'
+import {createUser, getSession, makeSession, verifyUser} from './queries'
 
 describe('Database Queries:', function (){
   describe('Unit - createUser():', function (){
@@ -69,7 +69,7 @@ describe('Database Queries:', function (){
       getSession()
         .then(() => { throw new Error(`Expected to reject an improper session object`) })
         .catch(err => {
-          if (err!=='improperObject'){
+          if (err!=='improperSessObject'){
           throw new Error(`Expected to reject an improper session object`)}
           done()}
       )
@@ -78,13 +78,45 @@ describe('Database Queries:', function (){
       getSession()
         .then(() => { throw new Error(`Expected to reject on an unfound session`) })
         .catch(err => {
-          if (err!=='unfoundedSession'){
+          if (err!=='unfoundSession'){
           throw new Error(`Expected to reject on an unfound session`)}
         done()}
       )
     })
     it('Returns a Session Array', function (done){
       getSession()
+        .then(session => {
+          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
+           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
+           && !isNaN(session[0])) {
+            done()
+          } else {
+            throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
+          }})
+        .catch(err => {throw new Error(`Expected to return a session array`)})
+    })
+  })
+  describe('Unit - makeSession():', function (){
+    it('Rejects an improper user object', function (done){
+      makeSession()
+        .then(() => { throw new Error(`Expected to reject an improper user object`) })
+        .catch(err => {
+          if (err!=='improperUserObject'){
+          throw new Error(`Expected to reject an improper user object`)}
+          done()}
+      )
+    })
+    it('Rejects on unfound user', function (done){
+      makeSession()
+        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
+        .catch(err => {
+          if (err!=='unfoundUser'){
+          throw new Error(`Expected to reject on an unfound user`)}
+        done()}
+      )
+    })
+    it('Returns a Session Array', function (done){
+      makeSession()
         .then(session => {
           if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
            && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')

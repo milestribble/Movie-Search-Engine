@@ -10,6 +10,12 @@ export function verifyUser () {
   })
 }
 
+export function makeSession () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
+
 export function getSession () {
   return new Promise( function(resolve, reject) {
 
