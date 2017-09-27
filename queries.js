@@ -1,10 +1,10 @@
-export function createUser () {
+export function makeUser () {
   return new Promise( function(resolve, reject) {
 
   })
 }
 
-export function verifyUser () {
+export function getUser () {
   return new Promise( function(resolve, reject) {
 
   })
@@ -23,6 +23,24 @@ export function getSession () {
 }
 
 export function killSession () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
+
+export function makeHistory () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
+
+export function getHistory () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
+
+export function killHistory () {
   return new Promise( function(resolve, reject) {
 
   })

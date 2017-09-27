@@ -1,10 +1,10 @@
 import {except, assert} from 'chai'
-import {createUser, getSession, killSession, makeSession, verifyUser} from './queries'
+import {makeUser, getSession, killSession, makeSession, getUser} from './queries'
 
 describe('Database Queries - Unit Tests:', function (){
-  describe('createUser():', function (){
+  describe('makeUser():', function (){
     it('Rejects an already in-use e-mail', function (done){
-      createUser()
+      makeUser()
         .then(() => { throw new Error(`Expected to reject used e-mail`) })
         .catch(err => {
           if (err!=='usedEmail'){
@@ -13,7 +13,7 @@ describe('Database Queries - Unit Tests:', function (){
       )
     })
     it('Rejects on unmatched passwords', function (done){
-      createUser()
+      makeUser()
         .then(() => { throw new Error(`Expected to reject unmatched passwords`) })
         .catch(err => {
           if (err!=='unmatched'){
@@ -22,7 +22,7 @@ describe('Database Queries - Unit Tests:', function (){
       )
     })
     it('Returns a User Object', function (done){
-      createUser()
+      makeUser()
         .then(result => {
           if (result.hasOwnProperty('self') && result.hasOwnProperty('email')
            && result.hasOwnProperty('fname') && result.hasOwnProperty('lname')) {
@@ -33,9 +33,9 @@ describe('Database Queries - Unit Tests:', function (){
         .catch(err => {throw new Error(`Expected to return a user object`+err)})
     })
   })
-  describe('verifyUser():', function (){
+  describe('getUser():', function (){
     it('Rejects an unenrolled e-mail', function (done){
-      verifyUser()
+      getUser()
         .then(() => { throw new Error(`Expected to reject an unenrolled e-mail`) })
         .catch(err => {
           if (err!=='usedEmail'){
@@ -44,7 +44,7 @@ describe('Database Queries - Unit Tests:', function (){
       )
     })
     it('Rejects on wrong password', function (done){
-      verifyUser()
+      getUser()
         .then(() => { throw new Error(`Expected to reject a wrong password`) })
         .catch(err => {
           if (err!=='unmatchedPassword'){
@@ -53,7 +53,7 @@ describe('Database Queries - Unit Tests:', function (){
       )
     })
     it('Returns a User Object', function (done){
-      verifyUser()
+      getUser()
         .then(result => {
           if (result.hasOwnProperty('self') && result.hasOwnProperty('email')
            && result.hasOwnProperty('fname') && result.hasOwnProperty('lname')) {
@@ -156,6 +156,36 @@ describe('Database Queries - Unit Tests:', function (){
           throw new Error(`Doesn't appear to have succesfully deleted: ` + JSON.stringify(result))
         }})
         .catch(err => {throw new Error(`Doesn't appear to have succesfully deleted.`+err)})
+    })
+  })
+  describe('makeHistory():', function (){
+    it('Rejects an improper search string', function (done){
+      makeHistory()
+        .then(() => { throw new Error(`Expected to reject the improper search string`) })
+        .catch(err => {
+          if (err!=='improperSearchString'){
+          throw new Error(`Expected to reject the improper search string`)}
+          done()}
+      )
+    })
+    it('Rejects on improper req.session', function (done){
+      makeHistory()
+        .then(() => { throw new Error(`Expected to reject on an improper req.session`) })
+        .catch(err => {
+          if (err!=='unfoundSession'){
+          throw new Error(`Expected to reject on an improper req.session`)}
+        done()}
+      )
+    })
+    it('Returns a confirmation on success', function (done){
+      makeHistory()
+        .then(result => {
+        if (result === 'recorded') {
+          done ()
+        } else {
+          throw new Error(`Doesn't appear to have succesfully recorded: ` + JSON.stringify(result))
+        }})
+        .catch(err => {throw new Error(`Doesn't appear to have succesfully recorded.`+err)})
     })
   })
 })
