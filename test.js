@@ -1,5 +1,5 @@
 import {except, assert} from 'chai'
-import {createUser, verifyUser} from './queries'
+import {createUser, getSession, verifyUser} from './queries'
 
 describe('Database Queries:', function (){
   describe('Unit - createUser():', function (){
@@ -47,13 +47,44 @@ describe('Database Queries:', function (){
       verifyUser()
         .then(() => { throw new Error(`Expected to reject a wrong password`) })
         .catch(err => {
-          if (err!=='unmatched'){
+          if (err!=='unmatchedPassword'){
           throw new Error(`Expected to reject a wrong password`)}
         done()}
       )
     })
-    it('Returns a Session Array', function (done){
+    it('Returns a User Object', function (done){
       verifyUser()
+        .then(result => {
+          if (result.hasOwnProperty('self') && result.hasOwnProperty('email')
+           && result.hasOwnProperty('fname') && result.hasOwnProperty('lname')) {
+            done()
+          } else {
+            throw new Error(`Doesn't appear to the a user object: ` + JSON.stringify(result))
+          }})
+        .catch(err => {throw new Error(`Expected to return a user object`)})
+    })
+  })
+  describe('Unit - getSession():', function (){
+    it('Rejects an improper session object', function (done){
+      getSession()
+        .then(() => { throw new Error(`Expected to reject an improper session object`) })
+        .catch(err => {
+          if (err!=='improperObject'){
+          throw new Error(`Expected to reject an improper session object`)}
+          done()}
+      )
+    })
+    it('Rejects on unfound session', function (done){
+      getSession()
+        .then(() => { throw new Error(`Expected to reject on an unfound session`) })
+        .catch(err => {
+          if (err!=='unfoundedSession'){
+          throw new Error(`Expected to reject on an unfound session`)}
+        done()}
+      )
+    })
+    it('Returns a Session Array', function (done){
+      getSession()
         .then(session => {
           if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
            && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')

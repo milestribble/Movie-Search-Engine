@@ -9,3 +9,9 @@ export function verifyUser () {
 
   })
 }
+
+export function getSession () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
