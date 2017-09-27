@@ -21,3 +21,9 @@ export function getSession () {
 
   })
 }
+
+export function killSession () {
+  return new Promise( function(resolve, reject) {
+
+  })
+}
