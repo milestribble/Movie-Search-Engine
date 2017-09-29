@@ -1,31 +1,58 @@
-import {except, assert} from 'chai'
-import {getUser, makeUser, getSession, makeSession, killSession, getHistory, makeHistory, killHistory} from './queries'
+import { except, assert } from 'chai'
+import chai from 'chai'
+import fs from 'fs'
+import chaiHttp from 'chai-http'
+import { exec } from 'child_process'
+import * as queries from './queries'
+chai.use(chaiHttp)
 
-describe('Database Queries - Unit Tests:', function (){
+const url = `http://localhost:8080`
+
+describe('Queries.js Unit Tests:', function (){
+  beforeEach(function (done) {
+    exec(`psql moviesearch_test < ./testschema.sql`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+
+        return;
+      }
+      // console.log(`exec log: ${stdout}`);
+      done()
+
+    });
+  })
   describe('makeUser():', function (){
     it('Rejects an already in-use e-mail', function (done){
-      makeUser()
-        .then(() => { throw new Error(`Expected to reject used e-mail`) })
+      queries.makeUser({first:'A', last:'B', email:'jimmys@thedailyshow.com', password:'ap', confirm:'ap'})
+        .then(() => {
+          throw new Error(`Expected to reject used e-mail:1`)
+        })
         .catch(err => {
           if (err!=='usedEmail'){
-          throw new Error(`Expected to reject used e-mail`)}
-        done()}
-      )
+            throw new Error(`Expected to reject used e-mail:2`)
+          } else {
+            done()
+          }
+        })
     })
     it('Rejects on unmatched passwords', function (done){
-      makeUser()
-        .then(() => { throw new Error(`Expected to reject unmatched passwords`) })
+      queries.makeUser({first:'A', last:'B', email:'a@b.com', password:'ap', confirm:'bz'})
+        .then(() => {
+          throw new Error(`Expected to reject unmatched passwords:1`)
+        })
         .catch(err => {
           if (err!=='unmatched'){
-          throw new Error(`Expected to reject unmatched passwords`)}
-        done()}
-      )
+            throw new Error(`Expected to reject unmatched passwords:2`)
+          } else {
+            done()
+          }
+        })
     })
     it('Returns a User Object', function (done){
-      makeUser()
+      queries.makeUser({first:'A', last:'B', email:'a@b.com', password:'ap', confirm:'ap'})
         .then(result => {
-          if (result.hasOwnProperty('self') && result.hasOwnProperty('email')
-           && result.hasOwnProperty('fname') && result.hasOwnProperty('lname')) {
+          if (result.hasOwnProperty('self') && result.email === 'a@b.com'
+           && result.first === 'A' && result.last === 'B') {
             done()
           } else {
             throw new Error(`Doesn't appear to the a user object: ` + JSON.stringify(result))
@@ -35,28 +62,32 @@ describe('Database Queries - Unit Tests:', function (){
   })
   describe('getUser():', function (){
     it('Rejects an unenrolled e-mail', function (done){
-      getUser()
-        .then(() => { throw new Error(`Expected to reject an unenrolled e-mail`) })
+      queries.getUser({email:'p@b.com', password:'al'})
+        .then(() => { throw new Error(`Expected to reject an unenrolled e-mail:1`) })
         .catch(err => {
-          if (err!=='usedEmail'){
-          throw new Error(`Expected to reject an unenrolled e-mail`)}
-          done()}
-      )
+          if (err!=='unusedEmail'){
+          throw new Error(`Expected to reject an unenrolled e-mail:2`)
+        } else {
+          done()
+        }
+      })
     })
     it('Rejects on wrong password', function (done){
-      getUser()
-        .then(() => { throw new Error(`Expected to reject a wrong password`) })
+      queries.getUser({email:'jimmys@thedailyshow.com', password:'wrong'})
+        .then(() => { throw new Error(`Expected to reject a wrong password:1`) })
         .catch(err => {
           if (err!=='unmatchedPassword'){
-          throw new Error(`Expected to reject a wrong password`)}
-        done()}
-      )
+          throw new Error(`Expected to reject a wrong password:2`)
+        } else {
+          done()
+        }
+      })
     })
     it('Returns a User Object', function (done){
-      getUser()
+      queries.getUser({email:'jimmys@thedailyshow.com', password:'ap'})
         .then(result => {
           if (result.hasOwnProperty('self') && result.hasOwnProperty('email')
-           && result.hasOwnProperty('fname') && result.hasOwnProperty('lname')) {
+           && result.hasOwnProperty('first') && result.hasOwnProperty('last')) {
             done()
           } else {
             throw new Error(`Doesn't appear to the a user object: ` + JSON.stringify(result))
@@ -66,28 +97,23 @@ describe('Database Queries - Unit Tests:', function (){
   })
   describe('makeSession():', function (){
     it('Rejects an improper user object', function (done){
-      makeSession()
-        .then(() => { throw new Error(`Expected to reject an improper user object`) })
+      let user = {}
+      queries.makeSession(user)
+        .then(() => { throw new Error(`Expected to reject an improper user object:1`) })
         .catch(err => {
           if (err!=='improperUserObject'){
-          throw new Error(`Expected to reject an improper user object`)}
-          done()}
-      )
-    })
-    it('Rejects on unfound user', function (done){
-      makeSession()
-        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
-        .catch(err => {
-          if (err!=='unfoundUser'){
-          throw new Error(`Expected to reject on an unfound user`)}
-        done()}
-      )
+            throw new Error(`Expected to reject an improper user object:2`+err)
+          } else {
+            done()
+          }
+        })
     })
     it('Returns a Session Array', function (done){
-      makeSession()
+      let user = {self: 1, first: 'James', last: 'Stewart', email: 'jimmys@thedailyshow.com'}
+      queries.makeSession(user)
         .then(session => {
-          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
-           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
+          if (session[1].self === 1 && session[1].hasOwnProperty('email')
+           && session[1].hasOwnProperty('first') && session[1].last === "Stewart"
            && !isNaN(session[0])) {
             done()
           } else {
@@ -98,16 +124,18 @@ describe('Database Queries - Unit Tests:', function (){
   })
   describe('getSession():', function (){
     it('Rejects an improper session object', function (done){
-      getSession()
-        .then(() => { throw new Error(`Expected to reject an improper session object`) })
+      queries.getSession(32)
+        .then(() => { throw new Error(`Expected to reject an improper session object:1`) })
         .catch(err => {
-          if (err!=='improperSessObject'){
-          throw new Error(`Expected to reject an improper session object`)}
-          done()}
-      )
+          if (err!=='get:improperSessObject'){
+            throw new Error(`Expected to reject an improper session object:2`)
+          } else {
+            done()
+          }
+        })
     })
     it('Rejects on unfound session', function (done){
-      getSession()
+      queries.getSession('72')
         .then(() => { throw new Error(`Expected to reject on an unfound session`) })
         .catch(err => {
           if (err!=='unfoundSession'){
@@ -116,10 +144,10 @@ describe('Database Queries - Unit Tests:', function (){
       )
     })
     it('Returns a Session Array', function (done){
-      getSession()
+      queries.getSession('1')
         .then(session => {
-          if (session[1].hasOwnProperty('self') && session[1].hasOwnProperty('email')
-           && session[1].hasOwnProperty('fname') && session[1].hasOwnProperty('lname')
+          if (session[1].self === 1  && session[1].hasOwnProperty('email')
+           && session[1].hasOwnProperty('first') && session[1].last === 'Stewart'
            && !isNaN(session[0])) {
             done()
           } else {
@@ -130,25 +158,29 @@ describe('Database Queries - Unit Tests:', function (){
   })
   describe('killSession():', function (){
     it('Rejects an improper session object', function (done){
-      killSession()
-        .then(() => { throw new Error(`Expected to reject an improper session object`) })
+      queries.killSession(48)
+        .then(() => { throw new Error(`Expected to reject an improper session object:1`) })
         .catch(err => {
-          if (err!=='improperSessObject'){
-          throw new Error(`Expected to reject an improper session object`)}
-          done()}
-      )
+          if (err!=='kill:improperSessObject'){
+            throw new Error(`Expected to reject an improper session object:2`)
+          } else {
+            done()
+          }
+        })
     })
     it('Rejects on unfound session', function (done){
-      killSession()
-        .then(() => { throw new Error(`Expected to reject on an unfound session`) })
+      queries.killSession('65')
+        .then(() => { throw new Error(`Expected to reject on an unfound session:1`) })
         .catch(err => {
           if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an unfound session`)}
-        done()}
-      )
+            throw new Error(`Expected to reject on an unfound session:2`+err)
+          } else {
+            done()
+          }
+        })
     })
     it('Returns a confirmation on success', function (done){
-      killSession()
+      queries.killSession('1')
         .then(result => {
         if (result === 'killedSession') {
           done ()
@@ -159,26 +191,30 @@ describe('Database Queries - Unit Tests:', function (){
     })
   })
   describe('makeHistory():', function (){
+    const req = {body:{query:'Treasure Island'}, session:['1',{self: '1', first: 'James', last: 'Stewart', email: 'jimmys@thedailyshow.com'}]}
     it('Rejects an improper search string', function (done){
-      makeHistory()
-        .then(() => { throw new Error(`Expected to reject the improper search string`) })
+      let thisReq = Object.assign({}, req, {body:{query:undefined}})
+      queries.makeHistory(thisReq)
+        .then(() => { throw new Error(`Expected to reject the improper search string:1`) })
         .catch(err => {
           if (err!=='improperSearchString'){
-          throw new Error(`Expected to reject the improper search string`)}
-          done()}
-      )
+          throw new Error(`Expected to reject the improper search string:2`)
+        } else {
+          done()
+        }})
     })
     it('Rejects on improper req.session', function (done){
-      makeHistory()
-        .then(() => { throw new Error(`Expected to reject on an improper req.session`) })
+      let thisReq = Object.assign({}, req, {session:undefined})
+      queries.makeHistory(thisReq)
+        .then(() => { throw new Error(`Expected to reject on an improper req.session:1`) })
         .catch(err => {
-          if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an improper req.session`)}
+          if (err!=='noUser4History'){
+          throw new Error(`Expected to reject on an improper req.session:2`+err)}
         done()}
       )
     })
     it('Returns a confirmation on success', function (done){
-      makeHistory()
+      queries.makeHistory(req)
         .then(result => {
         if (result === 'madeHistory') {
           done ()
@@ -189,19 +225,21 @@ describe('Database Queries - Unit Tests:', function (){
     })
   })
   describe('getHistory():', function (){
-    it('Rejects on unfound user', function (done){
-      getHistory()
-        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
+    const req = {session:['1',{self: '1', first: 'James', last: 'Stewart', email: 'jimmys@thedailyshow.com'}]}
+    it('Rejects on improper req.session', function (done){
+      let thisReq = Object.assign({}, req, {session:undefined})
+      queries.getHistory(thisReq)
+        .then(() => { throw new Error(`Expected to reject on an improper req.session:1`) })
         .catch(err => {
-          if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an unfound user`)}
+          if (err!=='noUser4History'){
+          throw new Error(`Expected to reject on an improper req.session:2`+err)}
         done()}
       )
     })
     it('Returns a History Array', function (done){
-      getHistory()
+      queries.getHistory(req)
         .then(history => {
-          if (!isNaN(history[0]) && history[1] instanceof Array ) {
+          if (history instanceof Array && typeof(history[0]) === 'string') {
             done()
           } else {
             throw new Error(`Doesn't appear to the a proper History array: ` + JSON.stringify(history))
@@ -210,17 +248,19 @@ describe('Database Queries - Unit Tests:', function (){
     })
   })
   describe('killHistory():', function (){
-    it('Rejects on unfound user', function (done){
-      killHistory()
-        .then(() => { throw new Error(`Expected to reject on an unfound user`) })
+    const req = {session:['1',{self: '1', first: 'James', last: 'Stewart', email: 'jimmys@thedailyshow.com'}]}
+    it('Rejects on improper req.session', function (done){
+      let thisReq = Object.assign({}, req, {session:undefined})
+      queries.killHistory(thisReq)
+        .then(() => { throw new Error(`Expected to reject on an improper req.session:1`) })
         .catch(err => {
-          if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an unfound user`)}
+          if (err!=='noUser4History'){
+          throw new Error(`Expected to reject on an improper req.session:2`+err)}
         done()}
       )
     })
-    it('Returns a History Array', function (done){
-      killHistory()
+    it('Returns a Confirmation', function (done){
+      queries.killHistory(req)
         .then(result => {
           if (result === 'killedHistory') {
             done ()
@@ -232,23 +272,94 @@ describe('Database Queries - Unit Tests:', function (){
   })
 })
 
-describe('Integration: User Creation:', function (){
-  describe('User Verification', function (){
+describe('Integration Tests:', function (){
+  describe('Signing Up', function (){
+    describe('Erroneous Data', function (){
+      it('Returns sign up page with used email alert', function (done){
+
+      })
+      it('Returns sign up page with unmatched password alert', function (done){
+
+      })
+    })
+    describe('Proper Data', function (){
+      it('Returns home page with first name', function (){
+
+      })
+      it('Returns sessionCookie', function (){
+
+      })
+    })
+  })
+  describe('Signing In', function (){
+    describe('Erroneous Data', function (){
+      it('Returns sign in page with unmatched login alert', function (done){
+
+      })
+    })
+    describe('Proper Data', function (){
+      it('Returns home page with first name', function (){
+
+      })
+      it('Returns sessionCookie', function (){
+
+      })
+    })
+  })
+  describe('Signing Out', function (){
+    it('Returns sign up page', function (done){
+
+    })
+    it('Does not return sessionCookie', function (done){
+
+    })
+  })
+
+
+
+
+  describe('Resuming a Session', function (){
+    it('Fails when given a used email', function (done){
+      pgtest.expect('SELECT * FROM vegetables WHERE self = $1',[1]).returning(null, [
+          [ 'potatoes', '1kg' ],
+          [ 'tomatoes', '500g' ]
+      ]);
+      // chai.request(url)
+      //   .post('/signup')
+      //   .end(function(err, res) {
+      //     expect(res).to.have.status(200);
+      //     done()
+      //   })
+      queries.query('SELECT * FROM vegetables WHERE self = $1', [1])
+      pgtest.check();
+      done()
+    })
+    it('Rejects when given unmatched passwords', function (){
+      chai.request(url)
+        .post('/signup')
+        .end(function(err, res) {
+          expect(res).to.have.status(200);
+          done()
+        })
+    })
+    it('Resolves when given proper data', function (){
+      chai.request(url)
+        .post('/signup')
+        .end(function(err, res) {
+          expect(res).to.have.status(200);
+          done()
+        })
+    })
+  })
+  describe('Ending a Session', function (){
+    it('', function () {
+
+    })
+  })
+  describe('Recording History', function (){
 
   })
-  describe('Session Creation', function (){
-
-  })
-  describe('Session Verification', function (){
-
-  })
-  describe('Session Deletion', function (){
-
-  })
-  describe('Record History', function (){
-
-  })
-  describe('Clear History', function (){
+  describe('Clearing History', function (){
 
   })
 })
