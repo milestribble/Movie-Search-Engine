@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --compilers js:babel-core/register",
-    "start": "babel app.js | node"
+    "test": "NODE_ENV=test mocha --compilers js:babel-core/register --no-warnings",
+    "start": "babel-node app.js --presets es2015 --no-warnings"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,13 @@
   "homepage": "https://github.com/milestribble/Movie-Search-Engine#readme",
   "dependencies": {
     "bcrypt": "^1.0.3",
+    "body-parser": "^1.18.2",
+    "cookie": "^0.3.1",
+    "cryptr": "^2.0.0",
     "express": "^4.15.5",
-    "pg": "^7.3.0"
+    "on-headers": "^1.0.1",
+    "pg": "^7.3.0",
+    "pug": "^2.0.0-rc.4"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

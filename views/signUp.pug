@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    title Signup
+    include style.pug
+  body
+    div.flex.wrapper
+      include head.pug
+      div.flex.content
+        div.container
+          form(class='form-body' method='post' action='/signup')
+            ul.flex-outer.flex
+              li.title.flex
+                if err
+                  text.error #{err}
+                else
+                  text FIRST TIME, EH?
+              li
+                label(for="first") First Name
+                input#first(type="text", placeholder="Enter your first name here" name="firstName")
+              li
+                label(for="last") Last Name
+                input#last(type="text", placeholder="Enter your last name here" name="lastName")
+              li
+                label(for="email") Email
+                input#email(type="email", placeholder="Enter your email here" name="email")
+              li
+                label(for="password") Password
+                input#password(type="password", placeholder="Create a password here" name="password")
+              li
+                label(for="confirm") Confirm
+                input#confirm(type="password", placeholder="Confirm your password here" name="confirm")
+              button(type="submit") Sign Up
+        include foot.pug

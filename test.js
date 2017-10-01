@@ -8,7 +8,7 @@ chai.use(chaiHttp)
 
 const url = `http://localhost:8080`
 
-describe('Queries.js Unit Tests:', function (){
+describe.only('Queries.js Unit Tests:', function (){
   beforeEach(function (done) {
     exec(`psql moviesearch_test < ./testschema.sql`, (error, stdout, stderr) => {
       if (error) {
@@ -114,7 +114,7 @@ describe('Queries.js Unit Tests:', function (){
         .then(session => {
           if (session[1].self === 1 && session[1].hasOwnProperty('email')
            && session[1].hasOwnProperty('first') && session[1].last === "Stewart"
-           && !isNaN(session[0])) {
+           && isNaN(session[0])) {
             done()
           } else {
             throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
@@ -135,20 +135,20 @@ describe('Queries.js Unit Tests:', function (){
         })
     })
     it('Rejects on unfound session', function (done){
-      queries.getSession('72')
-        .then(() => { throw new Error(`Expected to reject on an unfound session`) })
+      queries.getSession('eb')
+        .then(() => { throw new Error(`Expected to reject on an unfound session:1`) })
         .catch(err => {
           if (err!=='unfoundSession'){
-          throw new Error(`Expected to reject on an unfound session`)}
+          throw new Error(`Expected to reject on an unfound session:2`+err)}
         done()}
       )
     })
     it('Returns a Session Array', function (done){
-      queries.getSession('1')
+      queries.getSession('e8')
         .then(session => {
           if (session[1].self === 1  && session[1].hasOwnProperty('email')
            && session[1].hasOwnProperty('first') && session[1].last === 'Stewart'
-           && !isNaN(session[0])) {
+           && isNaN(session[0])) {
             done()
           } else {
             throw new Error(`Doesn't appear to the a proper session array: ` + JSON.stringify(session))
@@ -158,18 +158,18 @@ describe('Queries.js Unit Tests:', function (){
   })
   describe('killSession():', function (){
     it('Rejects an improper session object', function (done){
-      queries.killSession(48)
+      queries.killSession([9])
         .then(() => { throw new Error(`Expected to reject an improper session object:1`) })
         .catch(err => {
           if (err!=='kill:improperSessObject'){
-            throw new Error(`Expected to reject an improper session object:2`)
+            throw new Error(`Expected to reject an improper session object:2`+err)
           } else {
             done()
           }
         })
     })
     it('Rejects on unfound session', function (done){
-      queries.killSession('65')
+      queries.killSession(['ea'])
         .then(() => { throw new Error(`Expected to reject on an unfound session:1`) })
         .catch(err => {
           if (err!=='unfoundSession'){
@@ -180,7 +180,7 @@ describe('Queries.js Unit Tests:', function (){
         })
     })
     it('Returns a confirmation on success', function (done){
-      queries.killSession('1')
+      queries.killSession(['e8'])
         .then(result => {
         if (result === 'killedSession') {
           done ()
@@ -252,12 +252,17 @@ describe('Queries.js Unit Tests:', function (){
     it('Rejects on improper req.session', function (done){
       let thisReq = Object.assign({}, req, {session:undefined})
       queries.killHistory(thisReq)
-        .then(() => { throw new Error(`Expected to reject on an improper req.session:1`) })
+        .then(() => {
+          done()
+          throw new Error(`Expected to reject on an improper req.session:1`)
+        })
         .catch(err => {
           if (err!=='noUser4History'){
-          throw new Error(`Expected to reject on an improper req.session:2`+err)}
-        done()}
-      )
+          throw new Error(`Expected to reject on an improper req.session:2`+err)
+        } else {
+          done()
+        }
+      })
     })
     it('Returns a Confirmation', function (done){
       queries.killHistory(req)

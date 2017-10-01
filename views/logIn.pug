@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    title Signup
+    include style.pug
+  body
+    div.flex.wrapper
+      include head.pug
+      div.flex.content
+        div.container
+          form(class='form-body' method='post' action='/login')
+            ul.flex-outer.flex
+              li.title.flex
+                if err
+                  text.error #{err}
+                else
+                  text WELCOME BACK?
+              li
+                label(for="email") Email
+                input#email(type="email", placeholder="Enter your email here" name="email")
+              li
+                label(for="password") Password
+                input#password(type="password", placeholder="Enter your password" name="password")
+              button(type="submit") Sign In
+        include foot.pug

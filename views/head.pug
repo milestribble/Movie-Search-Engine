@@ -1,0 +1,11 @@
+header.flex
+  div
+    a(class='button', href='/home') Home
+  div
+    if self
+      a(class='button', href='logout') Sign Out
+    else
+      if signUp
+        a(class='button', href='login') Log In
+      else
+        a(class='button', href='signup') Sign Up

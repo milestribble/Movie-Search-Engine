@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    if self
+      title Welcome back
+    else
+      title Welcome
+    include style.pug
+  body
+    div.flex.wrapper
+      include head.pug
+      div.flex.content
+        div.container
+          form(class='form-body' method='post' action='/home')
+            ul.flex-outer.flex
+              li.title.flex
+                text WELCOME BACK #{self.first.toUpperCase()}
+              li
+                label(for="query") Search
+              li
+                input#query(type="text", placeholder="Movie Title" name="query")
+        include foot.pug
